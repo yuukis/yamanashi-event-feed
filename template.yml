@@ -76,7 +76,7 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     Condition: HasCustomDomain
     # Without this, BasePathMapping can race ahead of the implicit Stage's creation.
-    DependsOn: FeedApiStage
+    DependsOn: FeedApi.Stage
     Properties:
       DomainName: !Ref FeedApiDomain
       RestApiId: !Ref FeedApi
