@@ -42,3 +42,8 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: ANY
+
+Outputs:
+  FeedApiUrl:
+    Description: "API Gateway endpoint URL for the RSS feed"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/feed.xml"
