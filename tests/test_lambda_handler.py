@@ -40,9 +40,7 @@ def make_api_gateway_event(path="/feed.xml"):
 
 
 def test_lambda_handler_does_not_base64_encode_rss_body(monkeypatch):
-    # API Gateway only decodes a base64 Lambda response body for binary
-    # media types, which our template doesn't configure -- this reproduces
-    # a bug where clients got the literal base64 string instead of XML.
+    # Regression test for clients getting a literal base64 string instead of XML.
     monkeypatch.setattr(
         upstream, "fetch_events",
         lambda: ([FeedEvent(uid="1", title="Event",

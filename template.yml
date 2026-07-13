@@ -75,9 +75,7 @@ Resources:
   FeedApiBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Condition: HasCustomDomain
-    # AWS::Serverless::Api creates RestApi -> Deployment -> Stage under the
-    # hood; without this, BasePathMapping can race ahead of Stage creation
-    # and fail with "Invalid stage identifier specified".
+    # Without this, BasePathMapping can race ahead of the implicit Stage's creation.
     DependsOn: FeedApiStage
     Properties:
       DomainName: !Ref FeedApiDomain

@@ -53,8 +53,7 @@ def build_rss(
     generated_at: Optional[datetime] = None,
     language: str = "ja",
 ) -> str:
-    # Channel metadata is parameterized (not hardcoded) so a future
-    # per-community feed can reuse this with its own title/link/description.
+    # Channel metadata is parameterized so a future per-community feed can reuse this.
     if generated_at is None:
         generated_at = datetime.now(timezone.utc)
 

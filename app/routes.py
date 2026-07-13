@@ -50,8 +50,7 @@ def build_feed_response(
     channel_link: str = CHANNEL_LINK,
     channel_description: str = CHANNEL_DESCRIPTION,
 ) -> Response:
-    # Shared by any feed variant: a future per-community feed would just
-    # pre-filter `events` and pass a different channel title.
+    # A future per-community feed would pre-filter `events` and reuse this.
     top_events = sorted(events, key=lambda e: parse_iso8601(e.updated_at),
                         reverse=True)[:config.MAX_ITEMS]
 
