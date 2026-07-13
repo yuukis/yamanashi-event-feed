@@ -54,7 +54,8 @@ def build_feed_response(
     conditional GET. This is the shared pipeline for any feed variant: the
     top-level feed today, and potentially per-community feeds later, which
     would just pre-filter `events` and pass a different channel title."""
-    top_events = sorted(events, key=lambda e: e.updated_at, reverse=True)[:config.MAX_ITEMS]
+    top_events = sorted(events, key=lambda e: parse_iso8601(e.updated_at),
+                        reverse=True)[:config.MAX_ITEMS]
 
     last_modified = latest_updated_at(top_events)
     headers = {}
@@ -69,11 +70,11 @@ def build_feed_response(
 
 
 @app.get("/feed.xml", include_in_schema=False)
-def get_feed(if_modified_since: str = Header(None)):
+def get_feed(if_modified_since: Optional[str] = Header(None)):
     events, _ = upstream.fetch_events()
     return build_feed_response(if_modified_since, events)
 
 
 @app.get("/", include_in_schema=False)
-def get_feed_root(if_modified_since: str = Header(None)):
+def get_feed_root(if_modified_since: Optional[str] = Header(None)):
     return get_feed(if_modified_since)
