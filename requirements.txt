@@ -1,0 +1,7 @@
+requests
+fastapi
+uvicorn
+python-dotenv
+pytest
+httpx
+mangum
