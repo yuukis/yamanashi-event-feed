@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 @dataclass
@@ -14,7 +14,7 @@ class FeedEvent:
     keywords: Optional[List[str]] = None
 
     @staticmethod
-    def from_json(data: any):
+    def from_json(data: Any):
         if isinstance(data, list):
             return [FeedEvent.from_json(item) for item in data]
 
