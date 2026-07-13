@@ -66,18 +66,21 @@ def test_xml_escaping_of_special_characters():
     assert item.find("description").text == "Tom & Jerry <b>bold</b>"
 
 
-def test_top_n_and_sort_order():
+def test_build_rss_preserves_given_item_order():
+    """build_rss() itself doesn't sort or truncate -- that's
+    build_feed_response()'s job (see tests/test_routes.py). It just
+    renders whatever list it's given, in that order."""
     events = [
         make_event(str(i), f"Event {i}", f"2026-07-{i:02d}T00:00:00+09:00")
-        for i in range(1, 11)
+        for i in range(3, 0, -1)
     ]
 
-    xml_text = build_rss(events[:3], "Test Feed", "https://hub.yamanashi.dev",
+    xml_text = build_rss(events, "Test Feed", "https://hub.yamanashi.dev",
                          "desc")
     root = parse(xml_text)
     items = root.find("channel").findall("item")
     guids = [item.find("guid").text for item in items]
-    assert guids == ["1", "2", "3"]
+    assert guids == ["3", "2", "1"]
 
 
 def test_link_is_event_url_not_hub():
