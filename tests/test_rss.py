@@ -54,8 +54,6 @@ def test_xml_escaping_of_special_characters():
     xml_text = build_rss(events, "Test & Feed", "https://hub.yamanashi.dev",
                          "desc")
 
-    # Raw, unescaped special characters must not appear in the serialized
-    # XML outside of markup structure.
     assert "<event>" not in xml_text
     assert "A & B" not in xml_text
     assert "Tom & Jerry" not in xml_text
@@ -67,9 +65,6 @@ def test_xml_escaping_of_special_characters():
 
 
 def test_build_rss_preserves_given_item_order():
-    """build_rss() itself doesn't sort or truncate -- that's
-    build_feed_response()'s job (see tests/test_routes.py). It just
-    renders whatever list it's given, in that order."""
     events = [
         make_event(str(i), f"Event {i}", f"2026-07-{i:02d}T00:00:00+09:00")
         for i in range(3, 0, -1)

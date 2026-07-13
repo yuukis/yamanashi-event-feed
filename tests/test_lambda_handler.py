@@ -40,15 +40,9 @@ def make_api_gateway_event(path="/feed.xml"):
 
 
 def test_lambda_handler_does_not_base64_encode_rss_body(monkeypatch):
-    """Regression test: API Gateway REST APIs only base64-decode a Lambda
-    proxy response body when isBase64Encoded=True *and* the response's
-    content-type is registered as a binary media type on the API. Our SAM
-    template configures no binary media types, so if Mangum ever marks
-    the RSS response as base64 (its default text-mime allowlist doesn't
-    include application/rss+xml), API Gateway forwards the base64 string
-    to real clients as literal, unparseable body text -- which is exactly
-    what happened in production before app/main.py started passing an
-    explicit text_mime_types list to Mangum."""
+    # API Gateway only decodes a base64 Lambda response body for binary
+    # media types, which our template doesn't configure -- this reproduces
+    # a bug where clients got the literal base64 string instead of XML.
     monkeypatch.setattr(
         upstream, "fetch_events",
         lambda: ([FeedEvent(uid="1", title="Event",

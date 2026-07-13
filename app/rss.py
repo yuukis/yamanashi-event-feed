@@ -7,9 +7,7 @@ from .models import FeedEvent
 
 
 def parse_iso8601(value: str) -> datetime:
-    """Parse an ISO8601 string as returned by the upstream API. Replaces a
-    trailing 'Z' with '+00:00' since datetime.fromisoformat() only accepts
-    that suffix from Python 3.11 onward, and this app targets 3.10."""
+    # fromisoformat() only accepts a trailing 'Z' from Python 3.11+; this app targets 3.10.
     text = value.strip()
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
@@ -55,9 +53,8 @@ def build_rss(
     generated_at: Optional[datetime] = None,
     language: str = "ja",
 ) -> str:
-    """Render a list of events as an RSS 2.0 document. Channel metadata is
-    passed in rather than hardcoded so callers (e.g. a future per-community
-    feed) can customize it without touching this function."""
+    # Channel metadata is parameterized (not hardcoded) so a future
+    # per-community feed can reuse this with its own title/link/description.
     if generated_at is None:
         generated_at = datetime.now(timezone.utc)
 

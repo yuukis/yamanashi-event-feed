@@ -6,10 +6,6 @@ from app.routes import build_feed_response
 
 
 def test_sorts_by_actual_time_across_mixed_utc_offsets():
-    """Regression test: sorting by the raw ISO8601 string (instead of a
-    parsed datetime) misorders events whose updated_at strings use
-    different UTC offset notations, even when one is chronologically
-    later than the other."""
     earlier_but_lexically_larger = FeedEvent(
         uid="A",
         title="Earlier event",
@@ -54,5 +50,4 @@ def test_truncates_to_max_items(monkeypatch):
     root = ET.fromstring(response.body)
     guids = [item.find("guid").text
             for item in root.find("channel").findall("item")]
-    # Highest updated_at (10) first, truncated to MAX_ITEMS=3.
     assert guids == ["10", "9", "8"]
