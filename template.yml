@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  UpstreamApiUrl:
+    Type: String
+    Default: "https://api.event.yamanashi.dev"
+    Description: "Base URL of the upstream yamanashi-event-api"
+  HubBaseUrl:
+    Type: String
+    Default: "https://hub.yamanashi.dev"
+    Description: "Base URL of the Yamanashi Developer Hub frontend"
+  MaxItems:
+    Type: String
+    Default: "30"
+    Description: "Maximum number of items to include in the feed"
+  CacheTtlSeconds:
+    Type: String
+    Default: "300"
+    Description: "In-memory cache TTL (seconds) for upstream API responses"
+
+Resources:
+  FeedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: eventfeed-lambda
+      Handler: app.main.lambda_handler
+      Runtime: python3.10
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          UPSTREAM_API_URL: !Ref UpstreamApiUrl
+          HUB_BASE_URL: !Ref HubBaseUrl
+          MAX_ITEMS: !Ref MaxItems
+          CACHE_TTL_SECONDS: !Ref CacheTtlSeconds
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        ApiGateway:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
