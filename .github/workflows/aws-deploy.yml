@@ -42,11 +42,16 @@ jobs:
 
       - name: Deploy with SAM
         run: |
+          overrides=""
+          [ -n "${{ vars.FEED_CUSTOM_DOMAIN_NAME }}" ] && overrides="$overrides CustomDomainName=${{ vars.FEED_CUSTOM_DOMAIN_NAME }}"
+          [ -n "${{ vars.FEED_CERTIFICATE_ARN }}" ] && overrides="$overrides CertificateArn=${{ vars.FEED_CERTIFICATE_ARN }}"
+
           sam deploy --stack-name eventfeed-stack \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --resolve-s3 \
             --force-upload \
-            --no-confirm-changeset --no-fail-on-empty-changeset
+            --no-confirm-changeset --no-fail-on-empty-changeset \
+            ${overrides:+--parameter-overrides $overrides}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

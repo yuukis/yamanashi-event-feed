@@ -18,8 +18,26 @@ Parameters:
     Type: String
     Default: "300"
     Description: "In-memory cache TTL (seconds) for upstream API responses"
+  CustomDomainName:
+    Type: String
+    Default: ""
+    Description: "Custom domain for the feed (e.g. feed.event.yamanashi.dev). Leave empty to skip custom domain setup."
+  CertificateArn:
+    Type: String
+    Default: ""
+    Description: "ACM certificate ARN for CustomDomainName, must be in this stack's own region (ap-northeast-1). Required if CustomDomainName is set."
+
+Conditions:
+  HasCustomDomain: !Not [!Equals [!Ref CustomDomainName, ""]]
 
 Resources:
+  FeedApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      EndpointConfiguration:
+        Type: REGIONAL
+
   FeedFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -40,10 +58,33 @@ Resources:
         ApiGateway:
           Type: Api
           Properties:
+            RestApiId: !Ref FeedApi
             Path: /{proxy+}
             Method: ANY
+
+  FeedApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Condition: HasCustomDomain
+    Properties:
+      DomainName: !Ref CustomDomainName
+      RegionalCertificateArn: !Ref CertificateArn
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  FeedApiBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Condition: HasCustomDomain
+    Properties:
+      DomainName: !Ref FeedApiDomain
+      RestApiId: !Ref FeedApi
+      Stage: Prod
 
 Outputs:
   FeedApiUrl:
     Description: "API Gateway endpoint URL for the RSS feed"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/feed.xml"
+    Value: !Sub "https://${FeedApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/feed.xml"
+  FeedApiCustomDomainTarget:
+    Condition: HasCustomDomain
+    Description: "DNS target for CustomDomainName -- point a CNAME record at this value"
+    Value: !GetAtt FeedApiDomain.RegionalDomainName
