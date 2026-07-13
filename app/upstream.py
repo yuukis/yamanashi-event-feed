@@ -10,7 +10,7 @@ from .models import FeedEvent
 
 logger = logging.getLogger(__name__)
 
-FIELDS = "uid,title,event_url,started_at,updated_at,group_name,description,catch,keywords"
+FIELDS = "uid,title,event_url,updated_at,group_name,description,catch,keywords"
 
 # Single-entry, process-local cache. The upstream API has no filtering
 # query params today, so there is only ever one thing to cache: the full
