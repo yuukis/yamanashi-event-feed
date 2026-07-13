@@ -12,21 +12,14 @@ logger = logging.getLogger(__name__)
 
 FIELDS = "uid,title,event_url,updated_at,group_name,description,catch,keywords"
 
-# Single-entry, process-local cache. The upstream API has no filtering
-# query params today, so there is only ever one thing to cache: the full
-# event list. Kept as a plain dict (rather than a generic keyed cache)
-# since there is nothing to key on yet.
 _cache = {
-    "events": None,       # List[FeedEvent] | None
-    "last_modified": None,  # datetime | None (upstream's Last-Modified)
-    "fetched_at": None,     # float epoch seconds | None
+    "events": None,
+    "last_modified": None,
+    "fetched_at": None,
 }
 
 
 def fetch_events() -> Tuple[List[FeedEvent], Optional[datetime]]:
-    """Return the full upstream event list and its Last-Modified time,
-    using a short-TTL in-memory cache to avoid hitting the upstream API
-    on every request."""
     now = datetime.now(timezone.utc).timestamp()
 
     if (_cache["events"] is not None and _cache["fetched_at"] is not None

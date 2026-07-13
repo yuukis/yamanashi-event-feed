@@ -50,10 +50,8 @@ def build_feed_response(
     channel_link: str = CHANNEL_LINK,
     channel_description: str = CHANNEL_DESCRIPTION,
 ) -> Response:
-    """Sort/truncate `events` and render them as an RSS document, honoring
-    conditional GET. This is the shared pipeline for any feed variant: the
-    top-level feed today, and potentially per-community feeds later, which
-    would just pre-filter `events` and pass a different channel title."""
+    # Shared by any feed variant: a future per-community feed would just
+    # pre-filter `events` and pass a different channel title.
     top_events = sorted(events, key=lambda e: parse_iso8601(e.updated_at),
                         reverse=True)[:config.MAX_ITEMS]
 
