@@ -247,6 +247,35 @@ def test_fetch_group_events_per_page_capped_at_upstream_limit(monkeypatch):
     assert calls[0]["per_page"] == upstream.GROUP_EVENTS_PAGE_SIZE_LIMIT
 
 
+def test_group_key_is_url_encoded_in_upstream_requests(monkeypatch):
+    calls = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        calls.append(url)
+        return FakeResponse(200, SAMPLE_GROUP)
+
+    monkeypatch.setattr(upstream.requests, "get", fake_get)
+
+    upstream.fetch_group("weird?group&key")
+
+    assert calls[0] == f"{config.UPSTREAM_API_URL}/groups/weird%3Fgroup%26key"
+
+
+def test_group_caches_are_bounded(monkeypatch):
+    def fake_get(url, params=None, headers=None, timeout=None):
+        return FakeResponse(200, [SAMPLE_EVENT])
+
+    monkeypatch.setattr(upstream.requests, "get", fake_get)
+
+    for i in range(upstream.MAX_GROUP_CACHE_ENTRIES + 50):
+        upstream.fetch_group_events(f"group-{i}")
+
+    assert len(upstream._group_event_caches) == upstream.MAX_GROUP_CACHE_ENTRIES
+    # Oldest entries were evicted, most recent ones remain.
+    assert "group-0" not in upstream._group_event_caches
+    assert f"group-{upstream.MAX_GROUP_CACHE_ENTRIES + 49}" in upstream._group_event_caches
+
+
 def test_fetch_group_events_raises_not_found_on_404(monkeypatch):
     def fake_get(url, params=None, headers=None, timeout=None):
         return FakeResponse(404)
