@@ -102,6 +102,21 @@ so feed readers can poll cheaply.
 Upstream responses are cached in-memory for `CACHE_TTL_SECONDS` (default
 300s) to avoid hammering `yamanashi-event-api` on every request.
 
+### `GET /{group_key}/feed.xml`
+
+Same item shape as `GET /feed.xml`, scoped to a single community group.
+
+- Channel `<title>`/`<link>`/`<description>` come from the upstream
+  `GET /groups/{group_key}` (`yamanashi-event-api`), falling back to a
+  generated description when the group has none set.
+- Items come from `GET /groups/{group_key}/events`, covering the group's
+  full history (not just the ~90-day window `/feed.xml` uses), sorted by
+  `updated_at` descending and capped at `MAX_ITEMS`, same as `/feed.xml`.
+- Returns `404` if `group_key` doesn't match a known group.
+
+Also supports conditional GET, and is cached in-memory per `group_key`
+the same way as `/feed.xml`.
+
 ### Environment variables
 
 | Name                 | Default                             | Description                                   |
@@ -142,11 +157,6 @@ configured on the repo).
 - Changes to `yamanashi-event-frontend` (e.g. adding a
   `<link rel="alternate">` tag pointing at this feed) — to be done once
   this service is live.
-- A per-community feed (e.g. `/groups/{key}/feed.xml`). The code is
-  structured to make adding this straightforward later: `app/routes.py`'s
-  `build_feed_response()` already takes a pre-filtered event list and a
-  channel title/description, so a new route would just filter by
-  `group_name` and reuse it.
 
 <!-- LICENSE -->
 ## License
