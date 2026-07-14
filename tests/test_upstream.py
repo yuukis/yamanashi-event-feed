@@ -180,6 +180,16 @@ def test_fetch_group_raises_not_found_on_404(monkeypatch):
         upstream.fetch_group("does-not-exist")
 
 
+def test_fetch_group_raises_value_error_on_unexpected_payload(monkeypatch):
+    def fake_get(url, params=None, headers=None, timeout=None):
+        return FakeResponse(200, ["not", "a", "dict"])
+
+    monkeypatch.setattr(upstream.requests, "get", fake_get)
+
+    with pytest.raises(ValueError):
+        upstream.fetch_group("example-group")
+
+
 def test_fetch_group_does_not_refetch_within_ttl(monkeypatch):
     calls = []
 
