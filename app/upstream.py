@@ -15,15 +15,11 @@ logger = logging.getLogger(__name__)
 FIELDS = "uid,title,event_url,updated_at,group_name,description,catch,keywords"
 GROUP_FIELDS = "key,title,url,description"
 
-# Upstream's hard per_page ceiling for /groups/{key}/events; also used to
-# bound how many candidates we pull before build_feed_response() re-sorts
-# by updated_at and truncates to MAX_ITEMS.
+# Upstream's hard per_page ceiling for /groups/{key}/events.
 GROUP_EVENTS_PAGE_SIZE_LIMIT = 200
 
-# Caps how many distinct group_keys we hold cache entries for at once.
-# group_key is attacker-controlled (any path segment), so without a bound
-# an attacker could grow these dicts unboundedly by requesting many
-# distinct (including nonexistent) group_keys.
+# group_key is attacker-controlled, so bound how many distinct keys'
+# cache entries we hold at once.
 MAX_GROUP_CACHE_ENTRIES = 200
 
 _cache = {
@@ -105,9 +101,6 @@ def _new_cache() -> dict:
 
 
 def _get_group_cache(caches: "OrderedDict[str, dict]", group_key: str) -> dict:
-    """LRU-bounded lookup: existing entries move to the end on access, new
-    entries evict the least-recently-used one once over the cap, so a flood
-    of distinct (e.g. nonexistent) group_keys can't grow this unboundedly."""
     if group_key in caches:
         caches.move_to_end(group_key)
         return caches[group_key]
@@ -172,10 +165,8 @@ def fetch_group(group_key: str) -> Tuple[GroupInfo, Optional[datetime]]:
 
 def fetch_group_events(group_key: str) -> Tuple[List[FeedEvent], Optional[datetime]]:
     cache = _get_group_cache(_group_event_caches, group_key)
-    # Fetch at least MAX_ITEMS candidates (capped at upstream's own limit)
-    # so build_feed_response()'s updated_at re-sort has a reasonable pool
-    # to pick the true top MAX_ITEMS from -- upstream only sorts by
-    # started_at, not updated_at.
+    # Upstream sorts by started_at, not updated_at, so this is an
+    # approximation of the top MAX_ITEMS by updated_at.
     per_page = min(config.MAX_ITEMS, GROUP_EVENTS_PAGE_SIZE_LIMIT)
     return _fetch_group_resource(
         f"{config.UPSTREAM_API_URL}/groups/{quote(group_key, safe='')}/events",
