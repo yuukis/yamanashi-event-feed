@@ -211,10 +211,40 @@ def test_fetch_group_events_fetches_from_upstream(monkeypatch):
     assert calls[0][0] == f"{config.UPSTREAM_API_URL}/groups/example-group/events"
     assert calls[0][1] == {
         "fields": upstream.FIELDS,
-        "per_page": upstream.GROUP_EVENTS_PAGE_SIZE,
+        "per_page": min(config.MAX_ITEMS, upstream.GROUP_EVENTS_PAGE_SIZE_LIMIT),
         "order": "desc",
     }
     assert len(events) == 1
+
+
+def test_fetch_group_events_per_page_matches_max_items(monkeypatch):
+    calls = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        calls.append(params)
+        return FakeResponse(200, [SAMPLE_EVENT])
+
+    monkeypatch.setattr(upstream.requests, "get", fake_get)
+    monkeypatch.setattr(config, "MAX_ITEMS", 10)
+
+    upstream.fetch_group_events("example-group")
+
+    assert calls[0]["per_page"] == 10
+
+
+def test_fetch_group_events_per_page_capped_at_upstream_limit(monkeypatch):
+    calls = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        calls.append(params)
+        return FakeResponse(200, [SAMPLE_EVENT])
+
+    monkeypatch.setattr(upstream.requests, "get", fake_get)
+    monkeypatch.setattr(config, "MAX_ITEMS", 500)
+
+    upstream.fetch_group_events("example-group")
+
+    assert calls[0]["per_page"] == upstream.GROUP_EVENTS_PAGE_SIZE_LIMIT
 
 
 def test_fetch_group_events_raises_not_found_on_404(monkeypatch):

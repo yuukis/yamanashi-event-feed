@@ -12,7 +12,11 @@ logger = logging.getLogger(__name__)
 
 FIELDS = "uid,title,event_url,updated_at,group_name,description,catch,keywords"
 GROUP_FIELDS = "key,title,url,description"
-GROUP_EVENTS_PAGE_SIZE = 200
+
+# Upstream's hard per_page ceiling for /groups/{key}/events; also used to
+# bound how many candidates we pull before build_feed_response() re-sorts
+# by updated_at and truncates to MAX_ITEMS.
+GROUP_EVENTS_PAGE_SIZE_LIMIT = 200
 
 _cache = {
     "events": None,
@@ -145,7 +149,12 @@ def fetch_group(group_key: str) -> Tuple[GroupInfo, Optional[datetime]]:
 
 def fetch_group_events(group_key: str) -> Tuple[List[FeedEvent], Optional[datetime]]:
     cache = _group_event_caches.setdefault(group_key, _new_cache())
+    # Fetch at least MAX_ITEMS candidates (capped at upstream's own limit)
+    # so build_feed_response()'s updated_at re-sort has a reasonable pool
+    # to pick the true top MAX_ITEMS from -- upstream only sorts by
+    # started_at, not updated_at.
+    per_page = min(config.MAX_ITEMS, GROUP_EVENTS_PAGE_SIZE_LIMIT)
     return _fetch_group_resource(
         f"{config.UPSTREAM_API_URL}/groups/{group_key}/events",
-        {"fields": FIELDS, "per_page": GROUP_EVENTS_PAGE_SIZE, "order": "desc"},
+        {"fields": FIELDS, "per_page": per_page, "order": "desc"},
         cache, group_key, FeedEvent.from_json)
