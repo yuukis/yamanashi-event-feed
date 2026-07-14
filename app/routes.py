@@ -49,11 +49,14 @@ def build_feed_response(
     channel_title: str = CHANNEL_TITLE,
     channel_link: str = CHANNEL_LINK,
     channel_description: str = CHANNEL_DESCRIPTION,
+    extra_last_modified: Optional[datetime] = None,
 ) -> Response:
     top_events = sorted(events, key=lambda e: parse_iso8601(e.updated_at),
                         reverse=True)[:config.MAX_ITEMS]
 
-    last_modified = latest_updated_at(top_events)
+    candidates = [dt for dt in (latest_updated_at(top_events), extra_last_modified)
+                 if dt is not None]
+    last_modified = max(candidates) if candidates else None
     headers = {}
     if last_modified is not None:
         headers["Last-Modified"] = format_last_modified(last_modified)
@@ -79,7 +82,7 @@ def get_feed_root(if_modified_since: Optional[str] = Header(None)):
 @app.get("/{group_key}/feed.xml", include_in_schema=False)
 def get_group_feed(group_key: str, if_modified_since: Optional[str] = Header(None)):
     try:
-        group, _ = upstream.fetch_group(group_key)
+        group, group_last_modified = upstream.fetch_group(group_key)
         events, _ = upstream.fetch_group_events(group_key)
     except upstream.GroupNotFoundError:
         raise HTTPException(status_code=404, detail=f"Group '{group_key}' not found")
@@ -92,4 +95,5 @@ def get_group_feed(group_key: str, if_modified_since: Optional[str] = Header(Non
     )
 
     return build_feed_response(if_modified_since, events, channel_title,
-                               channel_link, channel_description)
+                               channel_link, channel_description,
+                               extra_last_modified=group_last_modified)
