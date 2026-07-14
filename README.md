@@ -109,9 +109,14 @@ Same item shape as `GET /feed.xml`, scoped to a single community group.
 - Channel `<title>`/`<link>`/`<description>` come from the upstream
   `GET /groups/{group_key}` (`yamanashi-event-api`), falling back to a
   generated description when the group has none set.
-- Items come from `GET /groups/{group_key}/events`, covering the group's
-  full history (not just the ~90-day window `/feed.xml` uses), sorted by
-  `updated_at` descending and capped at `MAX_ITEMS`, same as `/feed.xml`.
+- Items come from a single page of `GET /groups/{group_key}/events`
+  (`per_page = min(MAX_ITEMS, 200)`, `order=desc`, i.e. upstream's own
+  `started_at`-based ordering), re-sorted locally by `updated_at`
+  descending and capped at `MAX_ITEMS`, same as `/feed.xml`. This is a
+  "large enough candidate pool" heuristic, not a full-history scan: an
+  edit to an event outside that page (e.g. a very old one, for a
+  long-running/active group) won't surface here -- the same kind of
+  approximation `/feed.xml`'s 90-day window already makes.
 - Returns `404` if `group_key` doesn't match a known group.
 
 Also supports conditional GET, and is cached in-memory per `group_key`
