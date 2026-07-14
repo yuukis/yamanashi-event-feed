@@ -149,15 +149,6 @@ The `feed.event.yamanashi.dev` DNS record and the `Test`/`DockerHub`/
 `yamanashi-event-api` (they no-op if the required secrets aren't
 configured on the repo).
 
-<!-- OUT OF SCOPE -->
-## Out of scope (for now)
-
-- Atom feed support — RSS 2.0 alone covers feed readers and Slack/Discord
-  unfurling well enough for now.
-- Changes to `yamanashi-event-frontend` (e.g. adding a
-  `<link rel="alternate">` tag pointing at this feed) — to be done once
-  this service is live.
-
 <!-- LICENSE -->
 ## License
 
