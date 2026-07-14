@@ -42,6 +42,9 @@ class GroupInfo:
 
     @staticmethod
     def from_json(data: Any):
+        if not isinstance(data, dict):
+            raise ValueError("data must be dict")
+
         return GroupInfo(
             key=data["key"],
             title=data["title"],
