@@ -102,6 +102,13 @@ so feed readers can poll cheaply.
 Upstream responses are cached in-memory for `CACHE_TTL_SECONDS` (default
 300s) to avoid hammering `yamanashi-event-api` on every request.
 
+### `GET /{group_key}/feed.xml`
+
+Same item shape as `GET /feed.xml`, scoped to a single community group.
+Channel metadata comes from the upstream `GET /groups/{group_key}`;
+items come from `GET /groups/{group_key}/events`. Returns `404` if
+`group_key` doesn't match a known group.
+
 ### Environment variables
 
 | Name                 | Default                             | Description                                   |
@@ -133,20 +140,6 @@ The `feed.event.yamanashi.dev` DNS record and the `Test`/`DockerHub`/
 `DeployToAWS` GitHub Actions workflows follow the same pattern as
 `yamanashi-event-api` (they no-op if the required secrets aren't
 configured on the repo).
-
-<!-- OUT OF SCOPE -->
-## Out of scope (for now)
-
-- Atom feed support — RSS 2.0 alone covers feed readers and Slack/Discord
-  unfurling well enough for now.
-- Changes to `yamanashi-event-frontend` (e.g. adding a
-  `<link rel="alternate">` tag pointing at this feed) — to be done once
-  this service is live.
-- A per-community feed (e.g. `/groups/{key}/feed.xml`). The code is
-  structured to make adding this straightforward later: `app/routes.py`'s
-  `build_feed_response()` already takes a pre-filtered event list and a
-  channel title/description, so a new route would just filter by
-  `group_name` and reuse it.
 
 <!-- LICENSE -->
 ## License

@@ -31,3 +31,23 @@ class FeedEvent:
             )
 
         raise ValueError("data must be dict or List[dict]")
+
+
+@dataclass
+class GroupInfo:
+    key: str
+    title: str
+    url: Optional[str] = None
+    description: Optional[str] = None
+
+    @staticmethod
+    def from_json(data: Any):
+        if not isinstance(data, dict):
+            raise ValueError("data must be dict")
+
+        return GroupInfo(
+            key=data["key"],
+            title=data["title"],
+            url=data.get("url"),
+            description=data.get("description"),
+        )
